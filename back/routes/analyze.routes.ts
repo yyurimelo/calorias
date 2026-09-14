@@ -1,48 +1,93 @@
-import { Router } from "express";
+import { Router, type ErrorRequestHandler } from "express";
+import multer from "multer";
 import { AnalyzeRequest } from "../models";
-import { systemPrompt } from "../prompts/analyze.prompt";
+import { OpenRouterError, analyzeImages } from "../services/analyze.service";
 
 const router = Router();
 
-router.post("/analyze", async (req, res) => {
-  const { image, prompt } = req.body as AnalyzeRequest;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILES = 5;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: process.env.model,
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text:
-                prompt ?? "Analise essa imagem e identifique os alimentos e estime suas calorias.",
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: image,
-              },
-            },
-          ],
-        },
-      ],
-    }),
-  });
+const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-  const result = await response.json();
+class InvalidFileTypeError extends Error {
+  constructor(mimetype: string) {
+    super(`Tipo de arquivo não suportado: ${mimetype}`);
+    this.name = "InvalidFileTypeError";
+  }
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_FILE_SIZE, files: MAX_FILES },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new InvalidFileTypeError(file.mimetype));
+    }
+  },
+});
+
+const MULTER_ERRORS: Record<string, { status: number; message: string }> = {
+  LIMIT_FILE_SIZE: {
+    status: 413,
+    message: `A imagem excede o tamanho máximo de ${MAX_FILE_SIZE / 1024 / 1024}MB.`,
+  },
+  LIMIT_FILE_COUNT: {
+    status: 413,
+    message: `São permitidas no máximo ${MAX_FILES} imagens por requisição.`,
+  },
+  LIMIT_UNEXPECTED_FILE: {
+    status: 400,
+    message: 'Envie os arquivos no campo "images".',
+  },
+};
+
+function toDataUrl(file: Express.Multer.File): string {
+  return `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+}
+
+router.post("/analyze", upload.array("images", MAX_FILES), async (req, res) => {
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  const { prompt } = req.body as AnalyzeRequest;
+
+  if (files.length === 0) {
+    res.status(400).json({ error: "Nenhuma imagem enviada." });
+    return;
+  }
+
+  const images = files.map(toDataUrl);
+  const result = await analyzeImages({ images, prompt });
 
   res.json(result);
 });
+
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  if (err instanceof multer.MulterError) {
+    const known = MULTER_ERRORS[err.code];
+    if (known) {
+      res.status(known.status).json({ error: known.message });
+    } else {
+      res.status(413).json({ error: `Erro no upload: ${err.code}` });
+    }
+    return;
+  }
+
+  if (err instanceof InvalidFileTypeError) {
+    res.status(415).json({ error: err.message });
+    return;
+  }
+
+  if (err instanceof OpenRouterError) {
+    res.status(err.status).json({ error: `Falha na análise pela IA: ${err.message}` });
+    return;
+  }
+
+  console.error(err);
+  res.status(500).json({ error: "Erro interno do servidor." });
+};
+
+router.use(errorHandler);
 
 export default router;
