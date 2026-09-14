@@ -14,9 +14,11 @@
     "build:back": "npm run build --workspace back",
     "build:front": "npm run build --workspace front",
     "lint": "npm run lint --workspace front",
-    "start:front": "npm run start --workspace front"
+    "start:front": "npm run start --workspace front",
+    "format": "prettier --write \"back/**/*.{ts,js,json}\" \"front/**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "prettier": "^3.6.2"
   }
 }
