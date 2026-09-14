@@ -1,26 +1,22 @@
 {
-  "name": "front",
-  "version": "0.1.0",
+  "name": "calorias",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "back",
+    "front"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.3.5",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "dev": "concurrently -n back,front -c blue,green \"npm:dev:back\" \"npm:dev:front\"",
+    "dev:back": "npm run dev --workspace back",
+    "dev:front": "npm run dev --workspace front",
+    "build": "npm run build --workspace back && npm run build --workspace front",
+    "build:back": "npm run build --workspace back",
+    "build:front": "npm run build --workspace front",
+    "lint": "npm run lint --workspace front",
+    "start:front": "npm run start --workspace front"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.3.5",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "concurrently": "^9.2.1"
   }
 }
