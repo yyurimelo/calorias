@@ -1,10 +1,10 @@
 "use client";
 
-import { CircleAlert, Leaf } from "lucide-react";
+import { CircleAlert, Leaf, Maximize2 } from "lucide-react";
 import { Message, MessageContent } from "@/components/ui/message";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker";
-import type { ChatMessage as ChatMessageType } from "@/lib/types";
+import type { ChatMessage as ChatMessageType, DraftImage } from "@/lib/types";
 import { useStreamingText } from "@/lib/use-streaming-text";
 import { AnalysisResult } from "./analysis-result";
 import { TypingIndicator } from "./typing-indicator";
@@ -22,7 +22,13 @@ function AssistantMarker() {
   );
 }
 
-function UserMessage({ message }: { message: Extract<ChatMessageType, { role: "user" }> }) {
+function UserMessage({
+  message,
+  onImageClick,
+}: {
+  message: Extract<ChatMessageType, { role: "user" }>;
+  onImageClick: (image: DraftImage) => void;
+}) {
   return (
     <Message align="end" className="animate-message-in">
       <MessageContent className="items-end">
@@ -36,12 +42,21 @@ function UserMessage({ message }: { message: Extract<ChatMessageType, { role: "u
         {message.images.length > 0 && (
           <div className="flex flex-wrap justify-end gap-2">
             {message.images.map((image) => (
-              <img
+              <button
                 key={image.id}
-                src={image.url}
-                alt={image.name}
-                className="size-20 rounded-xl border border-border/70 object-cover shadow-soft"
-              />
+                type="button"
+                onClick={() => onImageClick(image)}
+                aria-label={`Ampliar imagem ${image.name}`}
+                className="group/img relative block size-20 overflow-hidden rounded-xl border border-border/70 shadow-soft outline-none transition-transform duration-200 hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/40"
+              >
+                <img src={image.url} alt={image.name} className="size-full object-cover" />
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition-[background-color,opacity] duration-200 group-hover/img:bg-ink/20 group-hover/img:opacity-100"
+                >
+                  <Maximize2 className="size-4 text-primary-foreground drop-shadow-sm" />
+                </span>
+              </button>
             ))}
           </div>
         )}
@@ -96,12 +111,14 @@ function AssistantMessage({
 export function ChatMessage({
   message,
   onStreamComplete,
+  onImageClick,
 }: {
   message: ChatMessageType;
   onStreamComplete: (id: string) => void;
+  onImageClick: (image: DraftImage) => void;
 }) {
   if (message.role === "user") {
-    return <UserMessage message={message} />;
+    return <UserMessage message={message} onImageClick={onImageClick} />;
   }
   return <AssistantMessage message={message} onStreamComplete={onStreamComplete} />;
 }

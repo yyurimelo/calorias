@@ -15,6 +15,7 @@ import type { ChatMessage as ChatMessageType, DraftImage } from "@/lib/types";
 import { ChatInput } from "./chat-input";
 import { ChatMessage } from "./chat-message";
 import { EmptyChat } from "./empty-chat";
+import { ImageLightbox } from "./image-lightbox";
 
 function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -23,6 +24,7 @@ function createId(): string {
 export function Chat() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<DraftImage | null>(null);
   const sendingRef = useRef(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,7 +95,8 @@ export function Chat() {
             <Leaf className="size-4" aria-hidden="true" />
           </span>
           <span className="font-display text-xl leading-none font-semibold tracking-tight">
-            calorias
+            calor
+            <span className="text-terracotta italic">ia</span>s
           </span>
         </div>
         <p className="hidden text-[0.68rem] font-semibold tracking-[0.16em] text-muted-foreground uppercase sm:block">
@@ -119,7 +122,11 @@ export function Chat() {
                     messageId={message.id}
                     scrollAnchor={message.role === "user"}
                   >
-                    <ChatMessage message={message} onStreamComplete={handleStreamComplete} />
+                    <ChatMessage
+                      message={message}
+                      onStreamComplete={handleStreamComplete}
+                      onImageClick={setLightboxImage}
+                    />
                   </MessageScrollerItem>
                 ))
               )}
@@ -130,6 +137,8 @@ export function Chat() {
       </MessageScrollerProvider>
 
       <ChatInput galleryInputRef={galleryInputRef} isLoading={isSending} onSend={handleSend} />
+
+      <ImageLightbox image={lightboxImage} onClose={() => setLightboxImage(null)} />
     </div>
   );
 }
