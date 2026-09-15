@@ -52,8 +52,8 @@ router.post("/analyze", upload.array("images", MAX_FILES), async (req, res) => {
   const files = (req.files as Express.Multer.File[] | undefined) ?? [];
   const { prompt } = req.body as AnalyzeRequest;
 
-  if (files.length === 0) {
-    res.status(400).json({ error: "Nenhuma imagem enviada." });
+  if (files.length === 0 && !prompt?.trim()) {
+    res.status(400).json({ error: "Envie uma imagem ou uma mensagem." });
     return;
   }
 
