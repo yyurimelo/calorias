@@ -1,26 +1,271 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-sand: var(--sand);
+  --color-leaf: var(--leaf);
+  --color-leaf-deep: var(--leaf-deep);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-deep: var(--terracotta-deep);
+
+  --font-sans: var(--font-schibsted);
+  --font-display: var(--font-spectral);
+  --font-heading: var(--font-spectral);
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-expo: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --shadow-soft: 0 1px 2px oklch(0.3 0.03 60 / 0.04), 0 8px 24px -12px oklch(0.3 0.03 60 / 0.12);
+  --shadow-lift: 0 2px 4px oklch(0.3 0.03 60 / 0.05), 0 16px 40px -16px oklch(0.3 0.03 60 / 0.18);
+
+  --animate-message-in: message-in 500ms var(--ease-out-expo) both;
+  --animate-fade-in: fade-in 300ms var(--ease-out-expo) both;
+  --animate-fade-in-slow: fade-in 700ms var(--ease-out-expo) both;
+  --animate-drift-1: drift-1 55s ease-in-out infinite alternate;
+  --animate-drift-2: drift-2 70s ease-in-out infinite alternate;
+  --animate-drift-3: drift-3 60s ease-in-out infinite alternate;
+  --animate-float-slow: float-slow 7s ease-in-out infinite alternate;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+  --animate-typing-dot: typing-dot 1.4s ease-in-out infinite;
+
+  @keyframes message-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes drift-1 {
+    from {
+      transform: translate3d(-4%, -3%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(5%, 6%, 0) scale(1.14);
+    }
+  }
+
+  @keyframes drift-2 {
+    from {
+      transform: translate3d(3%, 4%, 0) scale(1.05);
+    }
+    to {
+      transform: translate3d(-5%, -5%, 0) scale(0.94);
+    }
+  }
+
+  @keyframes drift-3 {
+    from {
+      transform: translate3d(0, 2%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(-3%, -4%, 0) scale(1.1);
+    }
+  }
+
+  @keyframes float-slow {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes typing-dot {
+    0%,
+    80%,
+    100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --background: oklch(0.972 0.014 85);
+  --foreground: oklch(0.29 0.032 62);
+  --card: oklch(0.986 0.01 85);
+  --card-foreground: oklch(0.29 0.032 62);
+  --popover: oklch(0.986 0.01 85);
+  --popover-foreground: oklch(0.29 0.032 62);
+  --primary: oklch(0.44 0.085 152);
+  --primary-foreground: oklch(0.972 0.012 85);
+  --secondary: oklch(0.925 0.02 88);
+  --secondary-foreground: oklch(0.34 0.035 70);
+  --muted: oklch(0.938 0.016 88);
+  --muted-foreground: oklch(0.455 0.028 72);
+  --accent: oklch(0.93 0.03 46);
+  --accent-foreground: oklch(0.44 0.11 40);
+  --destructive: oklch(0.55 0.17 27);
+  --border: oklch(0.885 0.02 85);
+  --input: oklch(0.86 0.02 85);
+  --ring: oklch(0.6 0.12 42);
+  --chart-1: oklch(0.46 0.09 152);
+  --chart-2: oklch(0.62 0.13 42);
+  --chart-3: oklch(0.72 0.1 90);
+  --chart-4: oklch(0.55 0.06 200);
+  --chart-5: oklch(0.5 0.1 320);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.955 0.014 85);
+  --sidebar-foreground: oklch(0.29 0.032 62);
+  --sidebar-primary: oklch(0.44 0.085 152);
+  --sidebar-primary-foreground: oklch(0.972 0.012 85);
+  --sidebar-accent: oklch(0.925 0.02 88);
+  --sidebar-accent-foreground: oklch(0.34 0.035 70);
+  --sidebar-border: oklch(0.885 0.02 85);
+  --sidebar-ring: oklch(0.6 0.12 42);
+
+  --cream: oklch(0.972 0.014 85);
+  --ink: oklch(0.29 0.032 62);
+  --sand: oklch(0.925 0.02 88);
+  --leaf: oklch(0.46 0.09 152);
+  --leaf-deep: oklch(0.36 0.08 150);
+  --terracotta: oklch(0.6 0.13 42);
+  --terracotta-deep: oklch(0.46 0.11 40);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-kerning: normal;
+  }
+}
+
+@utility texture-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-slot="message-scroller-viewport"] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 22%, transparent) transparent;
+}
+
+[data-slot="message-scroller-viewport"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-slot="message-scroller-viewport"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-slot="message-scroller-viewport"]::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--foreground) 16%, transparent);
+  border-radius: 999px;
+}
+
+[data-slot="message-scroller-viewport"]::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--foreground) 30%, transparent);
+}
+
+/* Scroll horizontal interno (conteúdo estruturado da análise da refeição).
+   Aplica-se apenas a elementos com overflow-x-auto dentro do card. */
+[data-slot="meal-sheet"] .overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 22%, transparent) transparent;
+}
+
+[data-slot="meal-sheet"] .overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+[data-slot="meal-sheet"] .overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-slot="meal-sheet"] .overflow-x-auto::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--foreground) 16%, transparent);
+  border-radius: 999px;
+}
+
+[data-slot="meal-sheet"] .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--foreground) 30%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
