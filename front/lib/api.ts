@@ -37,9 +37,10 @@ export async function analyzeMeal({ prompt, images }: AnalyzeMealInput): Promise
   };
 
   // Tenta novamente quando a conexão falha antes de qualquer resposta
-  // (ex.: "socket hang up" intermitente do proxy no dev).
+  // (ex.: "socket hang up" do proxy quando o backend reinicia no dev).
+  // Backoff progressivo cobre reinícios do tsx watch (~1-2s).
   let response: Response | null = null;
-  for (let attempt = 0; attempt <= 1; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       response = await fetch(ANALYZE_ENDPOINT, {
         method: "POST",
@@ -47,8 +48,10 @@ export async function analyzeMeal({ prompt, images }: AnalyzeMealInput): Promise
       });
       break;
     } catch {
-      if (attempt === 1) throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
-      await new Promise((resolve) => setTimeout(resolve, 700));
+      if (attempt === 2) {
+        throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
     }
   }
 
