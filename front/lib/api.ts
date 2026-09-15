@@ -29,14 +29,32 @@ export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function analyzeMeal({ prompt, images }: AnalyzeMealInput): Promise<string> {
-  const formData = new FormData();
-  images.forEach((image) => formData.append("images", image));
-  if (prompt?.trim()) formData.append("prompt", prompt.trim());
+  const buildBody = () => {
+    const formData = new FormData();
+    images.forEach((image) => formData.append("images", image));
+    if (prompt?.trim()) formData.append("prompt", prompt.trim());
+    return formData;
+  };
 
-  const response = await fetch(ANALYZE_ENDPOINT, {
-    method: "POST",
-    body: formData,
-  });
+  // Tenta novamente quando a conexão falha antes de qualquer resposta
+  // (ex.: "socket hang up" intermitente do proxy no dev).
+  let response: Response | null = null;
+  for (let attempt = 0; attempt <= 1; attempt++) {
+    try {
+      response = await fetch(ANALYZE_ENDPOINT, {
+        method: "POST",
+        body: buildBody(),
+      });
+      break;
+    } catch {
+      if (attempt === 1) throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
+      await new Promise((resolve) => setTimeout(resolve, 700));
+    }
+  }
+
+  if (!response) {
+    throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
+  }
 
   const data = (await response.json().catch(() => null)) as
     | (AnalyzeResponse & { error?: string })
