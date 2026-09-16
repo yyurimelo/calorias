@@ -19,20 +19,39 @@ export type AnalyzeResponse = {
   }>;
 };
 
+export type AnalyzeErrorBody = {
+  error?: string;
+  provider?: string;
+  errorType?: string;
+};
+
+export class AnalyzeError extends Error {
+  constructor(
+    message: string,
+    public readonly provider?: string,
+    public readonly errorType?: string
+  ) {
+    super(message);
+    this.name = "AnalyzeError";
+  }
+}
+
 type AnalyzeMealInput = {
   prompt?: string;
   images: File[];
+  provider: string;
 };
 
 export const MAX_IMAGES = 5;
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export async function analyzeMeal({ prompt, images }: AnalyzeMealInput): Promise<string> {
+export async function analyzeMeal({ prompt, images, provider }: AnalyzeMealInput): Promise<string> {
   const buildBody = () => {
     const formData = new FormData();
     images.forEach((image) => formData.append("images", image));
     if (prompt?.trim()) formData.append("prompt", prompt.trim());
+    formData.append("provider", provider);
     return formData;
   };
 
@@ -60,11 +79,15 @@ export async function analyzeMeal({ prompt, images }: AnalyzeMealInput): Promise
   }
 
   const data = (await response.json().catch(() => null)) as
-    | (AnalyzeResponse & { error?: string })
+    | (AnalyzeResponse & AnalyzeErrorBody)
     | null;
 
   if (!response.ok) {
-    throw new Error(data?.error ?? "Não foi possível analisar sua refeição.");
+    throw new AnalyzeError(
+      data?.error ?? "Não foi possível analisar sua refeição.",
+      data?.provider,
+      data?.errorType
+    );
   }
 
   return data?.choices?.[0]?.message?.content ?? "";

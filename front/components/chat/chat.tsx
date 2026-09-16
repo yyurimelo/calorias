@@ -10,7 +10,13 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller";
-import { analyzeMeal } from "@/lib/api";
+import { analyzeMeal, AnalyzeError } from "@/lib/api";
+import {
+  buildProviderOptions,
+  DEFAULT_PROVIDER,
+  type AIProviderId,
+  type ProviderStatus,
+} from "@/lib/providers";
 import type { ChatMessage as ChatMessageType, DraftImage } from "@/lib/types";
 import { ChatInput } from "./chat-input";
 import { ChatMessage } from "./chat-message";
@@ -25,6 +31,10 @@ export function Chat() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<DraftImage | null>(null);
+  const [provider, setProvider] = useState<AIProviderId>(DEFAULT_PROVIDER);
+  const [providerStatuses, setProviderStatuses] = useState<
+    Partial<Record<AIProviderId, ProviderStatus>>
+  >({});
   const sendingRef = useRef(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,56 +46,70 @@ export function Chat() {
     );
   }, []);
 
-  const handleSend = useCallback(async (text: string, images: DraftImage[]) => {
-    if (sendingRef.current) return;
-    sendingRef.current = true;
-    setIsSending(true);
+  const handleSend = useCallback(
+    async (text: string, images: DraftImage[]) => {
+      if (sendingRef.current) return;
+      sendingRef.current = true;
+      setIsSending(true);
 
-    const assistantId = createId();
+      const assistantId = createId();
 
-    const userMessage: ChatMessageType = {
-      id: createId(),
-      role: "user",
-      text,
-      images,
-    };
-    const assistantMessage: ChatMessageType = {
-      id: assistantId,
-      role: "assistant",
-      text: "",
-      status: "thinking",
-    };
+      const userMessage: ChatMessageType = {
+        id: createId(),
+        role: "user",
+        text,
+        images,
+      };
+      const assistantMessage: ChatMessageType = {
+        id: assistantId,
+        role: "assistant",
+        text: "",
+        status: "thinking",
+      };
 
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      setMessages((prev) => [...prev, userMessage, assistantMessage]);
 
-    try {
-      const content = await analyzeMeal({
-        prompt: text || undefined,
-        images: images.map((image) => image.file),
-      });
-      setMessages((prev) =>
-        prev.map((message) =>
-          message.id === assistantId ? { ...message, text: content, status: "streaming" } : message
-        )
-      );
-    } catch (error) {
-      const fallback = "Não consegui analisar agora. Tente novamente.";
-      setMessages((prev) =>
-        prev.map((message) =>
-          message.id === assistantId
-            ? {
-                ...message,
-                text: error instanceof Error ? error.message : fallback,
-                status: "error",
-              }
-            : message
-        )
-      );
-    } finally {
-      sendingRef.current = false;
-      setIsSending(false);
-    }
-  }, []);
+      try {
+        const content = await analyzeMeal({
+          prompt: text || undefined,
+          images: images.map((image) => image.file),
+          provider,
+        });
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantId
+              ? { ...message, text: content, status: "streaming" }
+              : message
+          )
+        );
+      } catch (error) {
+        const fallback = "Não consegui analisar agora. Tente novamente.";
+        const failedProvider = error instanceof AnalyzeError ? error.provider : undefined;
+        if (
+          error instanceof AnalyzeError &&
+          error.errorType === "RATE_LIMIT" &&
+          (failedProvider === "gemini" || failedProvider === "openrouter")
+        ) {
+          setProviderStatuses((prev) => ({ ...prev, [failedProvider]: "rate_limited" }));
+        }
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantId
+              ? {
+                  ...message,
+                  text: error instanceof Error ? error.message : fallback,
+                  status: "error",
+                }
+              : message
+          )
+        );
+      } finally {
+        sendingRef.current = false;
+        setIsSending(false);
+      }
+    },
+    [provider]
+  );
 
   return (
     <div className="relative z-10 flex h-dvh flex-col">
@@ -136,7 +160,14 @@ export function Chat() {
         </MessageScroller>
       </MessageScrollerProvider>
 
-      <ChatInput galleryInputRef={galleryInputRef} isLoading={isSending} onSend={handleSend} />
+      <ChatInput
+        galleryInputRef={galleryInputRef}
+        isLoading={isSending}
+        provider={provider}
+        providers={buildProviderOptions(providerStatuses)}
+        onProviderChange={setProvider}
+        onSend={handleSend}
+      />
 
       <ImageLightbox image={lightboxImage} onClose={() => setLightboxImage(null)} />
     </div>

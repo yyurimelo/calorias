@@ -6,13 +6,18 @@ import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { DraftImage } from "@/lib/types";
+import type { AIProviderId, ProviderOption } from "@/lib/providers";
 import { ACCEPTED_IMAGE_TYPES, MAX_IMAGES, MAX_IMAGE_SIZE } from "@/lib/api";
 import { AttachmentMenu, type AttachmentSource } from "./attachment-menu";
 import { ImagePreview } from "./image-preview";
+import { ProviderSelect } from "./provider-select";
 
 type ChatInputProps = {
   galleryInputRef: React.RefObject<HTMLInputElement | null>;
   isLoading: boolean;
+  provider: AIProviderId;
+  providers: ProviderOption[];
+  onProviderChange: (id: AIProviderId) => void;
   onSend: (text: string, images: DraftImage[]) => void;
 };
 
@@ -25,7 +30,14 @@ function createDraftImage(file: File): DraftImage {
   };
 }
 
-export function ChatInput({ galleryInputRef, isLoading, onSend }: ChatInputProps) {
+export function ChatInput({
+  galleryInputRef,
+  isLoading,
+  provider,
+  providers,
+  onProviderChange,
+  onSend,
+}: ChatInputProps) {
   const [text, setText] = useState("");
   const [images, setImages] = useState<DraftImage[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -214,6 +226,10 @@ export function ChatInput({ galleryInputRef, isLoading, onSend }: ChatInputProps
           {sendButton("size-9")}
         </div>
 
+        <div className="hidden items-center px-1 pt-1.5 md:flex">
+          <ProviderSelect providers={providers} value={provider} onChange={onProviderChange} />
+        </div>
+
         <div className="md:hidden">
           <Textarea
             value={text}
@@ -231,9 +247,13 @@ export function ChatInput({ galleryInputRef, isLoading, onSend }: ChatInputProps
           />
 
           <div className="flex items-center justify-between gap-2">
-            <AttachmentMenu className="size-10" onSelect={openSource} />
+            <ProviderSelect providers={providers} value={provider} onChange={onProviderChange} />
 
-            {sendButton("size-10")}
+            <div className="flex shrink-0 items-center gap-2">
+              <AttachmentMenu className="size-10" onSelect={openSource} />
+
+              {sendButton("size-10")}
+            </div>
           </div>
         </div>
 
